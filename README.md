@@ -27,14 +27,14 @@ Claude Desktop stores session data in two places:
 The tool:
 1. Auto-detects the current account from `~/.claude/.credentials.json`
 2. Finds all other (old) account folders
-3. Copies `local_*.json` metadata files into the current account's folder
-4. Rebuilds missing `sessions-index.json` for project directories
+3. Copies `local_*.json` metadata files from every old account into the current account's folder
+4. Rebuilds `sessions-index.json` for project directories (creating missing ones and filling in missing entries)
 
 ## Requirements
 
-- Windows
+- Windows or macOS
 - Python 3.10+
-- Claude Desktop installed (regular or Windows Store)
+- Claude Desktop installed (on Windows: regular or Windows Store)
 
 ## Usage
 
@@ -82,7 +82,23 @@ python migrate.py --old <old-account-uuid> --new <new-account-uuid>
 python migrate.py --rebuild-indexes
 ```
 
-Generates `sessions-index.json` for projects that have `.jsonl` session files but are missing the index.
+Creates `sessions-index.json` for projects missing one, and adds any missing
+entries to indexes that already exist (existing entries are left untouched).
+
+### Preview without writing
+
+```bash
+python migrate.py --dry-run
+python migrate.py --rebuild-indexes --dry-run
+```
+
+Shows exactly what would be copied/created/updated without touching any files.
+
+### Non-interactive
+
+```bash
+python migrate.py --yes        # accept the auto-detected migration, no prompts
+```
 
 ### Debug
 
@@ -100,18 +116,19 @@ Shows resolved paths and environment info — useful if sessions aren't being fo
 
 ## After Migration
 
-1. **Fully close** Claude Desktop (system tray -> Exit)
+1. **Fully close** Claude Desktop (Windows: system tray → Exit; macOS: Cmd-Q)
 2. Reopen Claude Desktop
 3. Your old sessions should appear in the chat list
 
 ## How Claude Desktop Stores Sessions
 
-The tool auto-detects both installation types:
+The tool auto-detects the platform and installation type:
 
-| Installation | Session path |
+| Platform / Installation | Session path |
 |---|---|
-| Regular (`.exe`) | `%AppData%\Claude\claude-code-sessions\` |
-| Windows Store | `%LocalAppData%\Packages\Claude_*\LocalCache\Roaming\Claude\claude-code-sessions\` |
+| macOS | `~/Library/Application Support/Claude/claude-code-sessions/` |
+| Windows — Regular (`.exe`) | `%AppData%\Claude\claude-code-sessions\` |
+| Windows — Store | `%LocalAppData%\Packages\Claude_*\LocalCache\Roaming\Claude\claude-code-sessions\` |
 
 ```
 claude-code-sessions/
